@@ -7,7 +7,7 @@ const childProcess = require('child_process');
 
 // Refs: https://github.com/nodejs/node/pull/2253
 if (common.isSunOS) {
-  console.log('1..0 # Skipped: unreliable on SunOS');
+  common.skip('unreliable on SunOS');
   return;
 }
 
@@ -22,7 +22,7 @@ const preloadOption = function(preloads) {
 };
 
 const fixture = function(name) {
-  return path.join(__dirname, '../fixtures/' + name);
+  return path.join(common.fixturesDir, name);
 };
 
 const fixtureA = fixture('printA.js');
@@ -81,7 +81,7 @@ var stdinStdout = '';
 stdinProc.stdout.on('data', function(d) {
   stdinStdout += d;
 });
-stdinProc.on('exit', function(code) {
+stdinProc.on('close', function(code) {
   assert.equal(code, 0);
   assert.equal(stdinStdout, 'A\nhello\n');
 });
@@ -97,7 +97,7 @@ var replStdout = '';
 replProc.stdout.on('data', function(d) {
   replStdout += d;
 });
-replProc.on('exit', function(code) {
+replProc.on('close', function(code) {
   assert.equal(code, 0);
   const output = [
     'A',
@@ -123,7 +123,7 @@ const interactive = childProcess.exec(nodeBinary + ' '
   + '-i',
   common.mustCall(function(err, stdout, stderr) {
     assert.ifError(err);
-    assert.strictEqual(stdout, `> 'test'\n> `);
+    assert.strictEqual(stdout, `> 'test'\r\n> `);
   }));
 
 interactive.stdin.write('a\n');
@@ -138,7 +138,7 @@ childProcess.exec(nodeBinary + ' '
   });
 
 // https://github.com/nodejs/node/issues/1691
-process.chdir(path.join(__dirname, '../fixtures/'));
+process.chdir(common.fixturesDir);
 childProcess.exec(nodeBinary + ' '
   + '--expose_debug_as=v8debug '
   + '--require ' + fixture('cluster-preload.js') + ' '

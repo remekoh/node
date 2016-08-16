@@ -14,7 +14,7 @@
 module.exports = {
     meta: {
         docs: {
-            description: "disallow `javascript",
+            description: "disallow `javascript:` urls",
             category: "Best Practices",
             recommended: false
         },
@@ -28,7 +28,7 @@ module.exports = {
 
             Literal: function(node) {
 
-                var value;
+                let value;
 
                 if (node.value && typeof node.value === "string") {
                     value = node.value.toLowerCase();

@@ -11,11 +11,12 @@ assert.equal(util.inspect('hello'), "'hello'");
 assert.equal(util.inspect(function() {}), '[Function]');
 assert.equal(util.inspect(undefined), 'undefined');
 assert.equal(util.inspect(null), 'null');
-assert.equal(util.inspect(/foo(bar\n)?/gi), '/foo(bar\\n)?/gi');
-assert.equal(util.inspect(new Date('Sun, 14 Feb 2010 11:48:40 GMT')),
+assert.equal(util.inspect(/foo(bar\r\n)?/gi), '/foo(bar\\r\\n)?/gi');
+assert.strictEqual(util.inspect(new Date('Sun, 14 Feb 2010 11:48:40 GMT')),
   new Date('2010-02-14T12:48:40+01:00').toISOString());
+assert.strictEqual(util.inspect(new Date('')), (new Date('')).toString());
 
-assert.equal(util.inspect('\n\u0001'), "'\\n\\u0001'");
+assert.equal(util.inspect('\r\n\u0001'), "'\\r\\n\\u0001'");
 
 assert.equal(util.inspect([]), '[]');
 assert.equal(util.inspect(Object.create([])), 'Array {}');
@@ -24,7 +25,7 @@ assert.equal(util.inspect([1, [2, 3]]), '[ 1, [ 2, 3 ] ]');
 
 assert.equal(util.inspect({}), '{}');
 assert.equal(util.inspect({a: 1}), '{ a: 1 }');
-assert.equal(util.inspect({a: function() {}}), '{ a: [Function] }');
+assert.equal(util.inspect({a: function() {}}), '{ a: [Function: a] }');
 assert.equal(util.inspect({a: 1, b: 2}), '{ a: 1, b: 2 }');
 assert.equal(util.inspect({'a': {}}), '{ a: {} }');
 assert.equal(util.inspect({'a': {'b': 2}}), '{ a: { b: 2 } }');
@@ -42,30 +43,37 @@ assert.equal(util.inspect(Object.create({},
   '{ visible: 1 }'
 );
 
+assert(/Object/.test(
+  util.inspect({a: {a: {a: {a: {}}}}}, undefined, undefined, true)
+));
+assert(!/Object/.test(
+  util.inspect({a: {a: {a: {a: {}}}}}, undefined, null, true)
+));
+
 for (const showHidden of [true, false]) {
   const ab = new ArrayBuffer(4);
   const dv = new DataView(ab, 1, 2);
   assert.equal(util.inspect(ab, showHidden), 'ArrayBuffer { byteLength: 4 }');
   assert.equal(util.inspect(new DataView(ab, 1, 2), showHidden),
-               'DataView {\n' +
-               '  byteLength: 2,\n' +
-               '  byteOffset: 1,\n' +
+               'DataView {\r\n' +
+               '  byteLength: 2,\r\n' +
+               '  byteOffset: 1,\r\n' +
                '  buffer: ArrayBuffer { byteLength: 4 } }');
   assert.equal(util.inspect(ab, showHidden), 'ArrayBuffer { byteLength: 4 }');
   assert.equal(util.inspect(dv, showHidden),
-               'DataView {\n' +
-               '  byteLength: 2,\n' +
-               '  byteOffset: 1,\n' +
+               'DataView {\r\n' +
+               '  byteLength: 2,\r\n' +
+               '  byteOffset: 1,\r\n' +
                '  buffer: ArrayBuffer { byteLength: 4 } }');
   ab.x = 42;
   dv.y = 1337;
   assert.equal(util.inspect(ab, showHidden),
                'ArrayBuffer { byteLength: 4, x: 42 }');
   assert.equal(util.inspect(dv, showHidden),
-               'DataView {\n' +
-               '  byteLength: 2,\n' +
-               '  byteOffset: 1,\n' +
-               '  buffer: ArrayBuffer { byteLength: 4, x: 42 },\n' +
+               'DataView {\r\n' +
+               '  byteLength: 2,\r\n' +
+               '  byteOffset: 1,\r\n' +
+               '  buffer: ArrayBuffer { byteLength: 4, x: 42 },\r\n' +
                '  y: 1337 }');
 }
 
@@ -75,25 +83,25 @@ for (const showHidden of [true, false]) {
   const dv = vm.runInNewContext('new DataView(ab, 1, 2)', { ab: ab });
   assert.equal(util.inspect(ab, showHidden), 'ArrayBuffer { byteLength: 4 }');
   assert.equal(util.inspect(new DataView(ab, 1, 2), showHidden),
-               'DataView {\n' +
-               '  byteLength: 2,\n' +
-               '  byteOffset: 1,\n' +
+               'DataView {\r\n' +
+               '  byteLength: 2,\r\n' +
+               '  byteOffset: 1,\r\n' +
                '  buffer: ArrayBuffer { byteLength: 4 } }');
   assert.equal(util.inspect(ab, showHidden), 'ArrayBuffer { byteLength: 4 }');
   assert.equal(util.inspect(dv, showHidden),
-               'DataView {\n' +
-               '  byteLength: 2,\n' +
-               '  byteOffset: 1,\n' +
+               'DataView {\r\n' +
+               '  byteLength: 2,\r\n' +
+               '  byteOffset: 1,\r\n' +
                '  buffer: ArrayBuffer { byteLength: 4 } }');
   ab.x = 42;
   dv.y = 1337;
   assert.equal(util.inspect(ab, showHidden),
                'ArrayBuffer { byteLength: 4, x: 42 }');
   assert.equal(util.inspect(dv, showHidden),
-               'DataView {\n' +
-               '  byteLength: 2,\n' +
-               '  byteOffset: 1,\n' +
-               '  buffer: ArrayBuffer { byteLength: 4, x: 42 },\n' +
+               'DataView {\r\n' +
+               '  byteLength: 2,\r\n' +
+               '  byteOffset: 1,\r\n' +
+               '  buffer: ArrayBuffer { byteLength: 4, x: 42 },\r\n' +
                '  y: 1337 }');
 }
 
@@ -113,13 +121,13 @@ for (const showHidden of [true, false]) {
     array[0] = 65;
     array[1] = 97;
     assert.equal(util.inspect(array, true),
-                 `${constructor.name} [\n` +
-                 `  65,\n` +
-                 `  97,\n` +
-                 `  [BYTES_PER_ELEMENT]: ${constructor.BYTES_PER_ELEMENT},\n` +
-                 `  [length]: ${length},\n` +
-                 `  [byteLength]: ${byteLength},\n` +
-                 `  [byteOffset]: 0,\n` +
+                 `${constructor.name} [\r\n` +
+                 `  65,\r\n` +
+                 `  97,\r\n` +
+                 `  [BYTES_PER_ELEMENT]: ${constructor.BYTES_PER_ELEMENT}` +
+                 `,\r\n  [length]: ${length},\r\n` +
+                 `  [byteLength]: ${byteLength},\r\n` +
+                 `  [byteOffset]: 0,\r\n` +
                  `  [buffer]: ArrayBuffer { byteLength: ${byteLength} } ]`);
     assert.equal(util.inspect(array, false), `${constructor.name} [ 65, 97 ]`);
   });
@@ -145,13 +153,13 @@ for (const showHidden of [true, false]) {
     array[0] = 65;
     array[1] = 97;
     assert.equal(util.inspect(array, true),
-                 `${constructor.name} [\n` +
-                 `  65,\n` +
-                 `  97,\n` +
-                 `  [BYTES_PER_ELEMENT]: ${constructor.BYTES_PER_ELEMENT},\n` +
-                 `  [length]: ${length},\n` +
-                 `  [byteLength]: ${byteLength},\n` +
-                 `  [byteOffset]: 0,\n` +
+                 `${constructor.name} [\r\n` +
+                 `  65,\r\n` +
+                 `  97,\r\n` +
+                 `  [BYTES_PER_ELEMENT]: ${constructor.BYTES_PER_ELEMENT}` +
+                 `,\r\n  [length]: ${length},\r\n` +
+                 `  [byteLength]: ${byteLength},\r\n` +
+                 `  [byteOffset]: 0,\r\n` +
                  `  [buffer]: ArrayBuffer { byteLength: ${byteLength} } ]`);
     assert.equal(util.inspect(array, false), `${constructor.name} [ 65, 97 ]`);
   });
@@ -204,15 +212,20 @@ assert.equal(util.inspect(value), '{ a: [Circular] }');
 
 // Array with dynamic properties
 value = [1, 2, 3];
-value.__defineGetter__('growingLength', function() {
-  this.push(true); return this.length;
-});
+Object.defineProperty(
+  value,
+  'growingLength',
+  {
+    enumerable: true,
+    get: () => { this.push(true); return this.length; }
+  }
+);
 assert.equal(util.inspect(value), '[ 1, 2, 3, growingLength: [Getter] ]');
 
 // Function with properties
 value = function() {};
 value.aprop = 42;
-assert.equal(util.inspect(value), '{ [Function] aprop: 42 }');
+assert.equal(util.inspect(value), '{ [Function: value] aprop: 42 }');
 
 // Regular expressions with properties
 value = /123/ig;
@@ -441,7 +454,7 @@ assert.doesNotThrow(function() {
 // util.inspect with "colors" option should produce as many lines as without it
 function test_lines(input) {
   var count_lines = function(str) {
-    return (str.match(/\n/g) || []).length;
+    return (str.match(/\r\n/g) || []).length;
   };
 
   var without_color = util.inspect(input);
@@ -468,6 +481,7 @@ test_lines({
 
 // test boxed primitives output the correct values
 assert.equal(util.inspect(new String('test')), '[String: \'test\']');
+assert.equal(util.inspect(Object(Symbol('test'))), '[Symbol: Symbol(test)]');
 assert.equal(util.inspect(new Boolean(false)), '[Boolean: false]');
 assert.equal(util.inspect(new Boolean(true)), '[Boolean: true]');
 assert.equal(util.inspect(new Number(0)), '[Number: 0]');
@@ -571,7 +585,7 @@ assert.strictEqual(util.inspect(keys), 'SetIterator { 1, 3 }');
 // Assumes that the first numeric character is the start of an item.
 
 function checkAlignment(container) {
-  var lines = util.inspect(container).split('\n');
+  var lines = util.inspect(container).split('\r\n');
   var pos;
   lines.forEach(function(line) {
     var npos = line.search(/\d/);
@@ -702,4 +716,51 @@ checkAlignment(new Map(big_array.map(function(y) { return [y, null]; })));
 {
   const x = new Uint8Array(101);
   assert(!/1 more item/.test(util.inspect(x, {maxArrayLength: Infinity})));
+}
+
+{
+  const obj = {foo: 'abc', bar: 'xyz'};
+  const oneLine = util.inspect(obj, {breakLength: Infinity});
+  // Subtract four for the object's two curly braces and two spaces of padding.
+  // Add one more to satisfy the strictly greater than condition in the code.
+  const breakpoint = oneLine.length - 5;
+  const twoLines = util.inspect(obj, {breakLength: breakpoint});
+
+  assert.strictEqual(oneLine, '{ foo: \'abc\', bar: \'xyz\' }');
+  assert.strictEqual(oneLine, util.inspect(obj, {breakLength: breakpoint + 1}));
+  assert.strictEqual(twoLines, '{ foo: \'abc\',\r\n  bar: \'xyz\' }');
+}
+
+// util.inspect.defaultOptions tests
+{
+  const arr = Array(101);
+  const obj = {a: {a: {a: {a: 1}}}};
+
+  const oldOptions = Object.assign({}, util.inspect.defaultOptions);
+
+  // Set single option through property assignment
+  util.inspect.defaultOptions.maxArrayLength = null;
+  assert(!/1 more item/.test(util.inspect(arr)));
+  util.inspect.defaultOptions.maxArrayLength = oldOptions.maxArrayLength;
+  assert(/1 more item/.test(util.inspect(arr)));
+  util.inspect.defaultOptions.depth = null;
+  assert(!/Object/.test(util.inspect(obj)));
+  util.inspect.defaultOptions.depth = oldOptions.depth;
+  assert(/Object/.test(util.inspect(obj)));
+  assert.strictEqual(
+    JSON.stringify(util.inspect.defaultOptions),
+    JSON.stringify(oldOptions)
+  );
+
+  // Set multiple options through object assignment
+  util.inspect.defaultOptions = {maxArrayLength: null, depth: null};
+  assert(!/1 more item/.test(util.inspect(arr)));
+  assert(!/Object/.test(util.inspect(obj)));
+  util.inspect.defaultOptions = oldOptions;
+  assert(/1 more item/.test(util.inspect(arr)));
+  assert(/Object/.test(util.inspect(obj)));
+  assert.strictEqual(
+    JSON.stringify(util.inspect.defaultOptions),
+    JSON.stringify(oldOptions)
+  );
 }

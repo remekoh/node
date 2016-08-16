@@ -10,7 +10,7 @@ Each type of heading has a description block.
     added: v0.10.0
     -->
 
-        Stability: 3 - Stable
+    > Stability: 3 - Stable
 
     description and examples.
 
@@ -33,6 +33,15 @@ Each type of heading has a description block.
     * `z` {Number} How many zebras to bring.
 
     A description of the function.
+
+    ### module.someNewFunction(x)
+    <!-- YAML
+    added: REPLACEME
+    -->
+
+    * `x` {String} the description of the string
+
+    This feature is not in a release yet.
 
     ### Event: 'blerg'
     <!-- YAML

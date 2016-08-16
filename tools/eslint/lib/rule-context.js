@@ -8,25 +8,28 @@
 // Requirements
 //------------------------------------------------------------------------------
 
-var RuleFixer = require("./util/rule-fixer");
+let RuleFixer = require("./util/rule-fixer");
 
 //------------------------------------------------------------------------------
 // Constants
 //------------------------------------------------------------------------------
 
-var PASSTHROUGHS = [
-    "getAllComments",
+let PASSTHROUGHS = [
     "getAncestors",
-    "getComments",
     "getDeclaredVariables",
     "getFilename",
+    "getScope",
+    "markVariableAsUsed",
+
+    // DEPRECATED
+    "getAllComments",
+    "getComments",
     "getFirstToken",
     "getFirstTokens",
     "getJSDocComment",
     "getLastToken",
     "getLastTokens",
     "getNodeByRangeIndex",
-    "getScope",
     "getSource",
     "getSourceLines",
     "getTokenAfter",
@@ -35,8 +38,7 @@ var PASSTHROUGHS = [
     "getTokens",
     "getTokensAfter",
     "getTokensBefore",
-    "getTokensBetween",
-    "markVariableAsUsed"
+    "getTokensBetween"
 ];
 
 //------------------------------------------------------------------------------
@@ -109,7 +111,7 @@ RuleContext.prototype = {
      * @returns {void}
      */
     report: function(nodeOrDescriptor, location, message, opts) {
-        var descriptor,
+        let descriptor,
             fix = null;
 
         // check to see if it's a new style call

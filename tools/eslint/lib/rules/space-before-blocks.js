@@ -5,7 +5,7 @@
 
 "use strict";
 
-var astUtils = require("../ast-utils");
+let astUtils = require("../ast-utils");
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -48,7 +48,7 @@ module.exports = {
     },
 
     create: function(context) {
-        var config = context.options[0],
+        let config = context.options[0],
             sourceCode = context.getSourceCode(),
             checkFunctions = true,
             checkKeywords = true,
@@ -81,7 +81,7 @@ module.exports = {
          * @returns {void} undefined.
          */
         function checkPrecedingSpace(node) {
-            var precedingToken = context.getTokenBefore(node),
+            let precedingToken = sourceCode.getTokenBefore(node),
                 hasSpace,
                 parent,
                 requireSpace;
@@ -127,15 +127,15 @@ module.exports = {
          * @returns {void} undefined.
          */
         function checkSpaceBeforeCaseBlock(node) {
-            var cases = node.cases,
+            let cases = node.cases,
                 firstCase,
                 openingBrace;
 
             if (cases.length > 0) {
                 firstCase = cases[0];
-                openingBrace = context.getTokenBefore(firstCase);
+                openingBrace = sourceCode.getTokenBefore(firstCase);
             } else {
-                openingBrace = context.getLastToken(node, 1);
+                openingBrace = sourceCode.getLastToken(node, 1);
             }
 
             checkPrecedingSpace(openingBrace);

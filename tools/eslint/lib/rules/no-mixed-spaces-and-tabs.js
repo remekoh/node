@@ -24,8 +24,9 @@ module.exports = {
     },
 
     create: function(context) {
+        let sourceCode = context.getSourceCode();
 
-        var smartTabs,
+        let smartTabs,
             ignoredLocs = [];
 
         switch (context.options[0]) {
@@ -84,10 +85,10 @@ module.exports = {
                  * or the reverse before non-tab/-space
                  * characters begin.
                  */
-                var regex = /^(?=[\t ]*(\t | \t))/,
+                let regex = /^(?=[\t ]*(\t | \t))/,
                     match,
-                    lines = context.getSourceLines(),
-                    comments = context.getAllComments();
+                    lines = sourceCode.lines,
+                    comments = sourceCode.getAllComments();
 
                 comments.forEach(function(comment) {
                     ignoredLocs.push(comment.loc);
@@ -118,10 +119,10 @@ module.exports = {
                     match = regex.exec(line);
 
                     if (match) {
-                        var lineNumber = i + 1,
+                        let lineNumber = i + 1,
                             column = match.index + 1;
 
-                        for (var j = 0; j < ignoredLocs.length; j++) {
+                        for (let j = 0; j < ignoredLocs.length; j++) {
                             if (beforeLoc(ignoredLocs[j], lineNumber, column)) {
                                 continue;
                             }

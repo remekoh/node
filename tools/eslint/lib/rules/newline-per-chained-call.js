@@ -33,8 +33,25 @@ module.exports = {
 
     create: function(context) {
 
-        var options = context.options[0] || {},
+        let options = context.options[0] || {},
             ignoreChainWithDepth = options.ignoreChainWithDepth || 2;
+
+        let sourceCode = context.getSourceCode();
+
+        /**
+         * Gets the property text of a given MemberExpression node.
+         * If the text is multiline, this returns only the first line.
+         *
+         * @param {ASTNode} node - A MemberExpression node to get.
+         * @returns {string} The property text of the node.
+         */
+        function getPropertyText(node) {
+            let prefix = node.computed ? "[" : ".";
+            let lines = sourceCode.getText(node.property).split(/\r\n|\r|\n/g);
+            let suffix = node.computed && lines.length === 1 ? "]" : "";
+
+            return prefix + lines[0] + suffix;
+        }
 
         return {
             "CallExpression:exit": function(node) {
@@ -42,9 +59,9 @@ module.exports = {
                     return;
                 }
 
-                var callee = node.callee;
-                var parent = callee.object;
-                var depth = 1;
+                let callee = node.callee;
+                let parent = callee.object;
+                let depth = 1;
 
                 while (parent && parent.callee) {
                     depth += 1;
@@ -55,7 +72,7 @@ module.exports = {
                     context.report(
                         callee.property,
                         callee.property.loc.start,
-                        "Expected line break after `" + context.getSource(callee.object).replace(/\r\n|\r|\n/g, "\\n") + "`."
+                        "Expected line break before `" + getPropertyText(callee) + "`."
                     );
                 }
             }

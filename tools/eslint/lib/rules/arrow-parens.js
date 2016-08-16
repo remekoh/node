@@ -16,6 +16,8 @@ module.exports = {
             recommended: false
         },
 
+        fixable: "code",
+
         schema: [
             {
                 enum: ["always", "as-needed"]
@@ -24,9 +26,11 @@ module.exports = {
     },
 
     create: function(context) {
-        var message = "Expected parentheses around arrow function argument.";
-        var asNeededMessage = "Unexpected parentheses around single function argument";
-        var asNeeded = context.options[0] === "as-needed";
+        let message = "Expected parentheses around arrow function argument.";
+        let asNeededMessage = "Unexpected parentheses around single function argument.";
+        let asNeeded = context.options[0] === "as-needed";
+
+        let sourceCode = context.getSourceCode();
 
         /**
          * Determines whether a arrow function argument end with `)`
@@ -34,22 +38,40 @@ module.exports = {
          * @returns {void}
          */
         function parens(node) {
-            var token = context.getFirstToken(node);
+            let token = sourceCode.getFirstToken(node);
 
             // as-needed: x => x
             if (asNeeded && node.params.length === 1 && node.params[0].type === "Identifier") {
                 if (token.type === "Punctuator" && token.value === "(") {
-                    context.report(node, asNeededMessage);
+                    context.report({
+                        node: node,
+                        message: asNeededMessage,
+                        fix: function(fixer) {
+                            let paramToken = context.getTokenAfter(token);
+                            let closingParenToken = context.getTokenAfter(paramToken);
+
+                            return fixer.replaceTextRange([
+                                token.range[0],
+                                closingParenToken.range[1]
+                            ], paramToken.value);
+                        }
+                    });
                 }
                 return;
             }
 
             if (token.type === "Identifier") {
-                var after = context.getTokenAfter(token);
+                let after = sourceCode.getTokenAfter(token);
 
                 // (x) => x
                 if (after.value !== ")") {
-                    context.report(node, message);
+                    context.report({
+                        node: node,
+                        message: message,
+                        fix: function(fixer) {
+                            return fixer.replaceText(token, "(" + token.value + ")");
+                        }
+                    });
                 }
             }
         }

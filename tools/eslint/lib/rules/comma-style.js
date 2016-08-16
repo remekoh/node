@@ -5,7 +5,7 @@
 
 "use strict";
 
-var astUtils = require("../ast-utils");
+let astUtils = require("../ast-utils");
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -39,9 +39,9 @@ module.exports = {
     },
 
     create: function(context) {
-
-        var style = context.options[0] || "last",
-            exceptions = {};
+        let style = context.options[0] || "last",
+            exceptions = {},
+            sourceCode = context.getSourceCode();
 
         if (context.options.length === 2 && context.options[1].hasOwnProperty("exceptions")) {
             exceptions = context.options[1].exceptions;
@@ -108,19 +108,25 @@ module.exports = {
          * @returns {void}
          */
         function validateComma(node, property) {
-            var items = node[property],
+            let items = node[property],
                 arrayLiteral = (node.type === "ArrayExpression"),
                 previousItemToken;
 
             if (items.length > 1 || arrayLiteral) {
 
                 // seed as opening [
-                previousItemToken = context.getFirstToken(node);
+                previousItemToken = sourceCode.getFirstToken(node);
 
                 items.forEach(function(item) {
-                    var commaToken = item ? context.getTokenBefore(item) : previousItemToken,
-                        currentItemToken = item ? context.getFirstToken(item) : context.getTokenAfter(commaToken),
-                        reportItem = item || currentItemToken;
+                    let commaToken = item ? sourceCode.getTokenBefore(item) : previousItemToken,
+                        currentItemToken = item ? sourceCode.getFirstToken(item) : sourceCode.getTokenAfter(commaToken),
+                        reportItem = item || currentItemToken,
+                        tokenBeforeComma = sourceCode.getTokenBefore(commaToken);
+
+                    // Check if previous token is wrapped in parentheses
+                    if (tokenBeforeComma && tokenBeforeComma.value === ")") {
+                        previousItemToken = tokenBeforeComma;
+                    }
 
                     /*
                      * This works by comparing three token locations:
@@ -141,7 +147,7 @@ module.exports = {
                                 currentItemToken, reportItem);
                     }
 
-                    previousItemToken = item ? context.getLastToken(item) : previousItemToken;
+                    previousItemToken = item ? sourceCode.getLastToken(item) : previousItemToken;
                 });
 
                 /*
@@ -152,12 +158,12 @@ module.exports = {
                  */
                 if (arrayLiteral) {
 
-                    var lastToken = context.getLastToken(node),
-                        nextToLastToken = context.getTokenBefore(lastToken);
+                    let lastToken = sourceCode.getLastToken(node),
+                        nextToLastToken = sourceCode.getTokenBefore(lastToken);
 
                     if (isComma(nextToLastToken)) {
                         validateCommaItemSpacing(
-                            context.getTokenBefore(nextToLastToken),
+                            sourceCode.getTokenBefore(nextToLastToken),
                             nextToLastToken,
                             lastToken,
                             lastToken
@@ -171,7 +177,7 @@ module.exports = {
         // Public
         //--------------------------------------------------------------------------
 
-        var nodes = {};
+        let nodes = {};
 
         if (!exceptions.VariableDeclaration) {
             nodes.VariableDeclaration = function(node) {

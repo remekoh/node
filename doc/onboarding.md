@@ -1,14 +1,12 @@
-## pre-setup
+# Onboarding
 
-Ensure everyone is added to https://github.com/orgs/nodejs/teams/collaborators
+This document is an outline of the things we tell new Collaborators at their
+onboarding session.
 
+* Prior to the onboarding session, add the new Collaborators to
+[the Collaborators team](https://github.com/orgs/nodejs/teams/collaborators).
 
-## onboarding to nodejs
-
-### intros
-
-
-### **thank you** for doing this
+## **thank you** for doing this
 
   * going to cover four things:
     * local setup
@@ -16,8 +14,7 @@ Ensure everyone is added to https://github.com/orgs/nodejs/teams/collaborators
     * issues, labels, and reviewing code
     * merging code
 
-
-### setup:
+## setup
 
   * notifications setup
     * use https://github.com/notifications or set up email
@@ -34,7 +31,7 @@ Ensure everyone is added to https://github.com/orgs/nodejs/teams/collaborators
   * `#node-dev` on `chat.freenode.net` is the best place to interact with the CTC / other collaborators
 
 
-### a little deeper about the project
+## a little deeper about the project
 
   * collaborators are effectively part owners
     * the project has the goals of its contributors
@@ -46,7 +43,7 @@ Ensure everyone is added to https://github.com/orgs/nodejs/teams/collaborators
     * generally: try to be nice to people
 
 
-### managing the issue tracker
+## managing the issue tracker
 
   * you have (mostly) free rein – don't hesitate to close an issue if you are confident that it should be closed
     * this will come more naturally over time
@@ -54,15 +51,13 @@ Ensure everyone is added to https://github.com/orgs/nodejs/teams/collaborators
     * Still need to follow the Code of Conduct.
 
 
-  * labels:
-    * generally sort issues by a concept of "subsystem" so that we know what part(s) of the codebase it touches, though there are also other useful labels.
-     * [**See "Labels"**](./onboarding-extras.md#labels)
-    * `ctc-agenda` if a topic is controversial or isn't coming to a conclusion after an extended time.
+  * Labels:
+    * There is [a bot](https://github.com/nodejs-github-bot/github-bot) that applies subsystem labels (for example, `doc`, `test`, `assert`, or `buffer`) so that we know what parts of the code base the pull request modifies. It is not perfect, of course. Feel free to apply relevant labels and remove irrelevant labels from pull requests and issues.
+    * [**See "Labels"**](./onboarding-extras.md#labels)
+    * Use the `ctc-agenda` if a topic is controversial or isn't coming to a conclusion after an extended time.
     * `semver-{minor,major}`:
-      * be conservative – that is, if a change has the remote *chance* of breaking something, go for `semver-major`
-      * when adding a semver label, add a comment explaining why you're adding it
-        * it's cached locally in your brain at that moment!
-
+      * If a change has the remote *chance* of breaking something, use `semver-major`
+      * When adding a semver label, add a comment explaining why you're adding it. Do it right away so you don't forget!
 
   * Notifying humans
     * [**See "Who to CC in issues"**](./onboarding-extras.md#who-to-cc-in-issues)
@@ -103,17 +98,19 @@ Ensure everyone is added to https://github.com/orgs/nodejs/teams/collaborators
     * also, things that cannot be done outside of core, or only with significant pain (example: async-wrap)
 
 
-  * CI testing:
-    * lives here: https://ci.nodejs.org/
-      * not automatically run - some of the platforms we test do not have full sandboxing support so we need to ensure what we run on it isn't potentially malicious
-    * make sure to log in – we use github authentication so it should be seamless
-    * go to "node-test-pull-request" and "Build with parameters"
-    * fill in the pull request number without the `#`, and check the verification that you have reviewed the code for potential malice
-      * The other options shouldn't need to be adjusted in most cases.
-    * link to the CI run in the PR by commenting "CI: <ci run link>"
+  * Continuous Integration (CI) Testing:
+    * https://ci.nodejs.org/
+    * It is not automatically run. You need to start it manually.
+    * Log in on CI is integrated with GitHub. Try to log in now!
+    * You will be using `node-test-pull-request` most of the time. Go there now!
+    * To get to the form to start a job, click on `Build with Parameters`. (If you don't see it, that probably means you are not logged in!) Click it now!
+    * To start CI testing from this screen, you need to fill in two elements on the form:
+      * The `CERTIFY_SAFE` box should be checked. By checking it, you are indicating that you have reviewed the code you are about to test and you are confident that it does not contain any malicious code. (We don't want people hijacking our CI hosts to attack other hosts on the internet, for example!)
+      * The `PR_ID` box should be filled in with the number identifying the pull request containing the code you wish to test. For example, if the URL for the pull request is https://github.com/nodejs/node/issues/7006, then put `7006` in the `PR_ID`.
+      * The remaining elements on the form are typically unchanged with the exception of `POST_STATUS_TO_PR`. Check that if you want a CI status indicator to be automatically inserted into the PR.
 
 
-### process for getting code in:
+## process for getting code in
 
   * the collaborator guide is a great resource: https://github.com/nodejs/node/blob/master/COLLABORATOR_GUIDE.md#technical-howto
 
@@ -145,7 +142,7 @@ Ensure everyone is added to https://github.com/orgs/nodejs/teams/collaborators
     * Info on PRs that don't like to apply found under [**"If `git am` fails"**](./onboarding-extras.md#if-git-am-fails).
 
 
-### Landing PRs
+## Landing PRs
 
 * Please never use GitHub's green "Merge Pull Request" button.
   * If you do, please force-push removing the merge.
@@ -168,12 +165,13 @@ Landing a PR
     * `Reviewed-By: human <email>`
       * Easiest to use `git log` then do a search
       * (`/Name` + `enter` (+ `n` as much as you need to) in vim)
+      * Only include collaborators who have commented "LGTM"
     * `PR-URL: <full-pr-url>`
 * `git push upstream master`
     * close the original PR with "Landed in `<commit hash>`".
 
 
-### exercise: make PRs adding yourselves to the README.
+## exercise: make PRs adding yourselves to the README
 
   * Example: https://github.com/nodejs/node/commit/7b09aade8468e1c930f36b9c81e6ac2ed5bc8732
     * to see full URL: `git log 7b09aade8468e1c930f36b9c81e6ac2ed5bc8732 -1`
@@ -183,7 +181,7 @@ Landing a PR
   * Make sure to added the `PR-URL: <full-pr-url>`!
 
 
-### final notes:
+## final notes
 
   * don't worry about making mistakes: everybody makes them, there's a lot to internalize and that takes time (and we recognize that!)
   * very few (no?) mistakes are unrecoverable

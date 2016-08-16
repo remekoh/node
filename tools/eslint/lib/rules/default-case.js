@@ -4,7 +4,7 @@
  */
 "use strict";
 
-var DEFAULT_COMMENT_PATTERN = /^no default$/;
+let DEFAULT_COMMENT_PATTERN = /^no default$/;
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -13,7 +13,7 @@ var DEFAULT_COMMENT_PATTERN = /^no default$/;
 module.exports = {
     meta: {
         docs: {
-            description: "require `default` cases in <code>switch</code> statements",
+            description: "require `default` cases in `switch` statements",
             category: "Best Practices",
             recommended: false
         },
@@ -30,10 +30,12 @@ module.exports = {
     },
 
     create: function(context) {
-        var options = context.options[0] || {};
-        var commentPattern = options.commentPattern ?
+        let options = context.options[0] || {};
+        let commentPattern = options.commentPattern ?
             new RegExp(options.commentPattern) :
             DEFAULT_COMMENT_PATTERN;
+
+        let sourceCode = context.getSourceCode();
 
         //--------------------------------------------------------------------------
         // Helpers
@@ -65,18 +67,18 @@ module.exports = {
                     return;
                 }
 
-                var hasDefault = node.cases.some(function(v) {
+                let hasDefault = node.cases.some(function(v) {
                     return v.test === null;
                 });
 
                 if (!hasDefault) {
 
-                    var comment;
-                    var comments;
+                    let comment;
+                    let comments;
 
-                    var lastCase = last(node.cases);
+                    let lastCase = last(node.cases);
 
-                    comments = context.getComments(lastCase).trailing;
+                    comments = sourceCode.getComments(lastCase).trailing;
 
                     if (comments.length) {
                         comment = last(comments);

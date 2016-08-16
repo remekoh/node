@@ -19,12 +19,13 @@ module.exports = {
 
         schema: [
             {
-                enum: ["smart", "allow-null"]
+                enum: ["always", "smart", "allow-null"]
             }
         ]
     },
 
     create: function(context) {
+        let sourceCode = context.getSourceCode();
 
         /**
          * Checks if an expression is a typeof expression
@@ -70,12 +71,12 @@ module.exports = {
         /**
          * Gets the location (line and column) of the binary expression's operator
          * @param {ASTNode} node The binary expression node to check
-         * @param {String} operator The operator to find
+         * @param {string} operator The operator to find
          * @returns {Object} { line, column } location of operator
          * @private
          */
         function getOperatorLocation(node) {
-            var opToken = context.getTokenAfter(node.left);
+            let opToken = sourceCode.getTokenAfter(node.left);
 
             return {line: opToken.loc.start.line, column: opToken.loc.start.column};
         }

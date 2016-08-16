@@ -15,7 +15,7 @@
 // Requirements
 //------------------------------------------------------------------------------
 
-var fs = require("fs"),
+let fs = require("fs"),
     path = require("path"),
 
     debug = require("debug"),
@@ -70,13 +70,14 @@ function translateOptions(cliOptions) {
  * @private
  */
 function printResults(engine, results, format, outputFile) {
-    var formatter,
+    let formatter,
         output,
         filePath;
 
-    formatter = engine.getFormatter(format);
-    if (!formatter) {
-        log.error("Could not find formatter '%s'.", format);
+    try {
+        formatter = engine.getFormatter(format);
+    } catch (e) {
+        log.error(e.message);
         return false;
     }
 
@@ -115,7 +116,7 @@ function printResults(engine, results, format, outputFile) {
  * Encapsulates all CLI behavior for eslint. Makes it easier to test as well as
  * for other Node.js programs to effectively run the CLI.
  */
-var cli = {
+let cli = {
 
     /**
      * Executes the CLI based on an array of arguments that is passed in.
@@ -125,7 +126,7 @@ var cli = {
      */
     execute: function(args, text) {
 
-        var currentOptions,
+        let currentOptions,
             files,
             report,
             engine,
@@ -171,13 +172,13 @@ var cli = {
                     return 1;
                 }
 
-                var fileConfig = engine.getConfigForFile(files[0]);
+                let fileConfig = engine.getConfigForFile(files[0]);
 
                 log.info(JSON.stringify(fileConfig, null, "  "));
                 return 0;
             }
 
-            report = text ? engine.executeOnText(text, currentOptions.stdinFilename) : engine.executeOnFiles(files);
+            report = text ? engine.executeOnText(text, currentOptions.stdinFilename, true) : engine.executeOnFiles(files);
             if (currentOptions.fix) {
                 debug("Fix mode enabled - applying fixes");
                 CLIEngine.outputFixes(report);

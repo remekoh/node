@@ -9,13 +9,13 @@
 // Requirements
 //------------------------------------------------------------------------------
 
-var lodash = require("lodash");
+let lodash = require("lodash");
 
 //------------------------------------------------------------------------------
 // Helpers
 //------------------------------------------------------------------------------
 
-var messages = {
+let messages = {
     function: "Use the function form of 'use strict'.",
     global: "Use the global form of 'use strict'.",
     multiple: "Multiple 'use strict' directives.",
@@ -23,7 +23,9 @@ var messages = {
     unnecessary: "Unnecessary 'use strict' directive.",
     module: "'use strict' is unnecessary inside of modules.",
     implied: "'use strict' is unnecessary when implied strict mode is enabled.",
-    unnecessaryInClasses: "'use strict' is unnecessary inside of classes."
+    unnecessaryInClasses: "'use strict' is unnecessary inside of classes.",
+    nonSimpleParameterList: "'use strict' directive inside a function with non-simple parameter list throws a syntax error since ES2016.",
+    wrap: "Wrap this function in a function with 'use strict' directive."
 };
 
 /**
@@ -33,7 +35,7 @@ var messages = {
  * @returns {ASTNode[]} All of the Use Strict Directives.
  */
 function getUseStrictDirectives(statements) {
-    var directives = [],
+    let directives = [],
         i, statement;
 
     for (i = 0; i < statements.length; i++) {
@@ -51,6 +53,26 @@ function getUseStrictDirectives(statements) {
     }
 
     return directives;
+}
+
+/**
+ * Checks whether a given parameter is a simple parameter.
+ *
+ * @param {ASTNode} node - A pattern node to check.
+ * @returns {boolean} `true` if the node is an Identifier node.
+ */
+function isSimpleParameter(node) {
+    return node.type === "Identifier";
+}
+
+/**
+ * Checks whether a given parameter list is a simple parameter list.
+ *
+ * @param {ASTNode[]} params - A parameter list to check.
+ * @returns {boolean} `true` if the every parameter is an Identifier node.
+ */
+function isSimpleParameterList(params) {
+    return params.every(isSimpleParameter);
 }
 
 //------------------------------------------------------------------------------
@@ -74,7 +96,7 @@ module.exports = {
 
     create: function(context) {
 
-        var mode = context.options[0] || "safe",
+        let mode = context.options[0] || "safe",
             ecmaFeatures = context.parserOptions.ecmaFeatures || {},
             scopes = [],
             classScopes = [],
@@ -95,7 +117,7 @@ module.exports = {
          * @returns {void}
          */
         function reportSlice(nodes, start, end, message) {
-            var i;
+            let i;
 
             for (i = start; i < end; i++) {
                 context.report(nodes[i], message);
@@ -130,13 +152,15 @@ module.exports = {
          * @returns {void}
          */
         function enterFunctionInFunctionMode(node, useStrictDirectives) {
-            var isInClass = classScopes.length > 0,
+            let isInClass = classScopes.length > 0,
                 isParentGlobal = scopes.length === 0 && classScopes.length === 0,
                 isParentStrict = scopes.length > 0 && scopes[scopes.length - 1],
                 isStrict = useStrictDirectives.length > 0;
 
             if (isStrict) {
-                if (isParentStrict) {
+                if (!isSimpleParameterList(node.params)) {
+                    context.report(useStrictDirectives[0], messages.nonSimpleParameterList);
+                } else if (isParentStrict) {
                     context.report(useStrictDirectives[0], messages.unnecessary);
                 } else if (isInClass) {
                     context.report(useStrictDirectives[0], messages.unnecessaryInClasses);
@@ -144,7 +168,11 @@ module.exports = {
 
                 reportAllExceptFirst(useStrictDirectives, messages.multiple);
             } else if (isParentGlobal) {
-                context.report(node, messages.function);
+                if (isSimpleParameterList(node.params)) {
+                    context.report(node, messages.function);
+                } else {
+                    context.report(node, messages.wrap);
+                }
             }
 
             scopes.push(isParentStrict || isStrict);
@@ -166,20 +194,25 @@ module.exports = {
          * @returns {void}
          */
         function enterFunction(node) {
-            var isBlock = node.body.type === "BlockStatement",
+            let isBlock = node.body.type === "BlockStatement",
                 useStrictDirectives = isBlock ?
                     getUseStrictDirectives(node.body.body) : [];
 
             if (mode === "function") {
                 enterFunctionInFunctionMode(node, useStrictDirectives);
-            } else {
-                reportAll(useStrictDirectives, messages[mode]);
+            } else if (useStrictDirectives.length > 0) {
+                if (isSimpleParameterList(node.params)) {
+                    reportAll(useStrictDirectives, messages[mode]);
+                } else {
+                    context.report(useStrictDirectives[0], messages.nonSimpleParameterList);
+                    reportAllExceptFirst(useStrictDirectives, messages.multiple);
+                }
             }
         }
 
         rule = {
             Program: function(node) {
-                var useStrictDirectives = getUseStrictDirectives(node.body);
+                let useStrictDirectives = getUseStrictDirectives(node.body);
 
                 if (node.sourceType === "module") {
                     mode = "module";

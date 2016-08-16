@@ -5,7 +5,7 @@
 
 "use strict";
 
-var astUtils = require("../ast-utils");
+let astUtils = require("../ast-utils");
 
 //------------------------------------------------------------------------------
 // Helpers
@@ -31,17 +31,17 @@ function isVariadicApplyCalling(node) {
  * Checks whether or not the tokens of two given nodes are same.
  * @param {ASTNode} left - A node 1 to compare.
  * @param {ASTNode} right - A node 2 to compare.
- * @param {RuleContext} context - The ESLint rule context object.
+ * @param {SourceCode} sourceCode - The ESLint source code object.
  * @returns {boolean} the source code for the given node.
  */
-function equalTokens(left, right, context) {
-    var tokensL = context.getTokens(left);
-    var tokensR = context.getTokens(right);
+function equalTokens(left, right, sourceCode) {
+    let tokensL = sourceCode.getTokens(left);
+    let tokensR = sourceCode.getTokens(right);
 
     if (tokensL.length !== tokensR.length) {
         return false;
     }
-    for (var i = 0; i < tokensL.length; ++i) {
+    for (let i = 0; i < tokensL.length; ++i) {
         if (tokensL[i].type !== tokensR[i].type ||
             tokensL[i].value !== tokensR[i].value
         ) {
@@ -82,17 +82,19 @@ module.exports = {
     },
 
     create: function(context) {
+        let sourceCode = context.getSourceCode();
+
         return {
             CallExpression: function(node) {
                 if (!isVariadicApplyCalling(node)) {
                     return;
                 }
 
-                var applied = node.callee.object;
-                var expectedThis = (applied.type === "MemberExpression") ? applied.object : null;
-                var thisArg = node.arguments[0];
+                let applied = node.callee.object;
+                let expectedThis = (applied.type === "MemberExpression") ? applied.object : null;
+                let thisArg = node.arguments[0];
 
-                if (isValidThisArg(expectedThis, thisArg, context)) {
+                if (isValidThisArg(expectedThis, thisArg, sourceCode)) {
                     context.report(node, "use the spread operator instead of the '.apply()'.");
                 }
             }

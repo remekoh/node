@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rule to flag when re-assigning native objects
+ * @fileoverview Rule to disallow assignments to native objects or read-only global variables
  * @author Ilya Volodin
  */
 
@@ -12,9 +12,9 @@
 module.exports = {
     meta: {
         docs: {
-            description: "disallow reassigning native objects",
+            description: "disallow assignments to native objects or read-only global variables",
             category: "Best Practices",
-            recommended: false
+            recommended: true
         },
 
         schema: [
@@ -33,8 +33,8 @@ module.exports = {
     },
 
     create: function(context) {
-        var config = context.options[0];
-        var exceptions = (config && config.exceptions) || [];
+        let config = context.options[0];
+        let exceptions = (config && config.exceptions) || [];
 
         /**
          * Reports write references.
@@ -44,7 +44,7 @@ module.exports = {
          * @returns {void}
          */
         function checkReference(reference, index, references) {
-            var identifier = reference.identifier;
+            let identifier = reference.identifier;
 
             if (reference.init === false &&
                 reference.isWrite() &&
@@ -55,14 +55,14 @@ module.exports = {
             ) {
                 context.report({
                     node: identifier,
-                    message: "{{name}} is a read-only native object.",
+                    message: "Read-only global '{{name}}' should not be modified.",
                     data: identifier
                 });
             }
         }
 
         /**
-         * Reports write references if a given variable is readonly builtin.
+         * Reports write references if a given variable is read-only builtin.
          * @param {Variable} variable - A variable to check.
          * @returns {void}
          */
@@ -74,7 +74,7 @@ module.exports = {
 
         return {
             Program: function() {
-                var globalScope = context.getScope();
+                let globalScope = context.getScope();
 
                 globalScope.variables.forEach(checkVariable);
             }

@@ -41,7 +41,9 @@ module.exports = {
     },
 
     create: function(context) {
-        var options = context.options && Array.isArray(context.options) && context.options[0] || { words: true, nonwords: false };
+        let options = context.options && Array.isArray(context.options) && context.options[0] || { words: true, nonwords: false };
+
+        let sourceCode = context.getSourceCode();
 
         //--------------------------------------------------------------------------
         // Helpers
@@ -89,8 +91,8 @@ module.exports = {
         /**
         * Verify Unary Word Operator has spaces after the word operator
         * @param {ASTnode} node AST node
-        * @param {object} firstToken first token from the AST node
-        * @param {object} secondToken second token from the AST node
+        * @param {Object} firstToken first token from the AST node
+        * @param {Object} secondToken second token from the AST node
         * @param {string} word The word to be used for reporting
         * @returns {void}
         */
@@ -109,8 +111,8 @@ module.exports = {
         /**
         * Verify Unary Word Operator doesn't have spaces after the word operator
         * @param {ASTnode} node AST node
-        * @param {object} firstToken first token from the AST node
-        * @param {object} secondToken second token from the AST node
+        * @param {Object} firstToken first token from the AST node
+        * @param {Object} secondToken second token from the AST node
         * @param {string} word The word to be used for reporting
         * @returns {void}
         */
@@ -131,8 +133,8 @@ module.exports = {
         /**
         * Check Unary Word Operators for spaces after the word operator
         * @param {ASTnode} node AST node
-        * @param {object} firstToken first token from the AST node
-        * @param {object} secondToken second token from the AST node
+        * @param {Object} firstToken first token from the AST node
+        * @param {Object} secondToken second token from the AST node
         * @param {string} word The word to be used for reporting
         * @returns {void}
         */
@@ -158,7 +160,7 @@ module.exports = {
         * @returns {void}
         */
         function checkForSpacesAfterYield(node) {
-            var tokens = context.getFirstTokens(node, 3),
+            let tokens = sourceCode.getFirstTokens(node, 3),
                 word = "yield";
 
             if (!node.argument || node.delegate) {
@@ -171,8 +173,8 @@ module.exports = {
         /**
         * Verifies UnaryExpression, UpdateExpression and NewExpression have spaces before or after the operator
         * @param {ASTnode} node AST node
-        * @param {object} firstToken First token in the expression
-        * @param {object} secondToken Second token in the expression
+        * @param {Object} firstToken First token in the expression
+        * @param {Object} secondToken Second token in the expression
         * @returns {void}
         */
         function verifyNonWordsHaveSpaces(node, firstToken, secondToken) {
@@ -205,8 +207,8 @@ module.exports = {
         /**
         * Verifies UnaryExpression, UpdateExpression and NewExpression don't have spaces before or after the operator
         * @param {ASTnode} node AST node
-        * @param {object} firstToken First token in the expression
-        * @param {object} secondToken Second token in the expression
+        * @param {Object} firstToken First token in the expression
+        * @param {Object} secondToken Second token in the expression
         * @returns {void}
         */
         function verifyNonWordsDontHaveSpaces(node, firstToken, secondToken) {
@@ -239,7 +241,7 @@ module.exports = {
         * @returns {void}
         */
         function checkForSpaces(node) {
-            var tokens = context.getFirstTokens(node, 2),
+            let tokens = sourceCode.getFirstTokens(node, 2),
                 firstToken = tokens[0],
                 secondToken = tokens[1];
 
@@ -248,7 +250,7 @@ module.exports = {
                 return;
             }
 
-            var operator = node.prefix ? tokens[0].value : tokens[1].value;
+            let operator = node.prefix ? tokens[0].value : tokens[1].value;
 
             if (overrideExistsForOperator(node, operator)) {
                 if (overrideEnforcesSpaces(node, operator)) {

@@ -22,6 +22,7 @@ module.exports = {
     },
 
     create: function(context) {
+        let sourceCode = context.getSourceCode();
 
         /**
          * Reports an unnecessary semicolon error.
@@ -46,9 +47,9 @@ module.exports = {
          * @returns {void}
          */
         function checkForPartOfClassBody(firstToken) {
-            for (var token = firstToken;
+            for (let token = firstToken;
                 token.type === "Punctuator" && token.value !== "}";
-                token = context.getTokenAfter(token)
+                token = sourceCode.getTokenAfter(token)
             ) {
                 if (token.value === ";") {
                     report(token);
@@ -64,8 +65,17 @@ module.exports = {
              * @returns {void}
              */
             EmptyStatement: function(node) {
-                var parent = node.parent,
-                    allowedParentTypes = ["ForStatement", "ForInStatement", "ForOfStatement", "WhileStatement", "DoWhileStatement"];
+                let parent = node.parent,
+                    allowedParentTypes = [
+                        "ForStatement",
+                        "ForInStatement",
+                        "ForOfStatement",
+                        "WhileStatement",
+                        "DoWhileStatement",
+                        "IfStatement",
+                        "LabeledStatement",
+                        "WithStatement"
+                    ];
 
                 if (allowedParentTypes.indexOf(parent.type) === -1) {
                     report(node);
@@ -78,7 +88,7 @@ module.exports = {
              * @returns {void}
              */
             ClassBody: function(node) {
-                checkForPartOfClassBody(context.getFirstToken(node, 1)); // 0 is `{`.
+                checkForPartOfClassBody(sourceCode.getFirstToken(node, 1)); // 0 is `{`.
             },
 
             /**
@@ -87,7 +97,7 @@ module.exports = {
              * @returns {void}
              */
             MethodDefinition: function(node) {
-                checkForPartOfClassBody(context.getTokenAfter(node));
+                checkForPartOfClassBody(sourceCode.getTokenAfter(node));
             }
         };
 

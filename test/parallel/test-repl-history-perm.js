@@ -4,7 +4,7 @@
 const common = require('../common');
 
 if (common.isWindows) {
-  console.log('1..0 # Skipped: Win32 uses ACLs for file permissions, ' +
+  common.skip('Win32 uses ACLs for file permissions, ' +
               'modes are always 0666 and says nothing about group/other ' +
               'read access.');
   return;
@@ -35,6 +35,10 @@ const replHistoryPath = path.join(common.tmpDir, '.node_repl_history');
 const checkResults = common.mustCall(function(err, r) {
   if (err)
     throw err;
+
+  // The REPL registers 'module' and 'require' globals
+  common.allowGlobals(r.context.module, r.context.require);
+
   r.input.end();
   const stat = fs.statSync(replHistoryPath);
   assert.strictEqual(

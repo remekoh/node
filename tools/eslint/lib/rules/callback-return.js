@@ -24,7 +24,8 @@ module.exports = {
 
     create: function(context) {
 
-        var callbacks = context.options[0] || ["callback", "cb", "next"];
+        let callbacks = context.options[0] || ["callback", "cb", "next"],
+            sourceCode = context.getSourceCode();
 
         //--------------------------------------------------------------------------
         // Helpers
@@ -47,12 +48,33 @@ module.exports = {
         }
 
         /**
+         * Check to see if a node contains only identifers
+         * @param {ASTNode} node The node to check
+         * @returns {boolean} Whether or not the node contains only identifers
+         */
+        function containsOnlyIdentifiers(node) {
+            if (node.type === "Identifier") {
+                return true;
+            }
+
+            if (node.type === "MemberExpression") {
+                if (node.object.type === "Identifier") {
+                    return true;
+                } else if (node.object.type === "MemberExpression") {
+                    return containsOnlyIdentifiers(node.object);
+                }
+            }
+
+            return false;
+        }
+
+        /**
          * Check to see if a CallExpression is in our callback list.
          * @param {ASTNode} node The node to check against our callback names list.
-         * @returns {Boolean} Whether or not this function matches our callback name.
+         * @returns {boolean} Whether or not this function matches our callback name.
          */
         function isCallback(node) {
-            return node.callee.type === "Identifier" && callbacks.indexOf(node.callee.name) > -1;
+            return containsOnlyIdentifiers(node.callee) && callbacks.indexOf(sourceCode.getText(node.callee)) > -1;
         }
 
         /**
@@ -90,13 +112,13 @@ module.exports = {
         return {
             CallExpression: function(node) {
 
-                // if we"re not a callback we can return
+                // if we're not a callback we can return
                 if (!isCallback(node)) {
                     return;
                 }
 
                 // find the closest block, return or loop
-                var closestBlock = findClosestParentOfType(node, ["BlockStatement", "ReturnStatement", "ArrowFunctionExpression"]) || {},
+                let closestBlock = findClosestParentOfType(node, ["BlockStatement", "ReturnStatement", "ArrowFunctionExpression"]) || {},
                     lastItem, parentType;
 
                 // if our parent is a return we know we're ok

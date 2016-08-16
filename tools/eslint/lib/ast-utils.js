@@ -9,18 +9,19 @@
 // Requirements
 //------------------------------------------------------------------------------
 
-var esutils = require("esutils");
+let esutils = require("esutils");
 
 //------------------------------------------------------------------------------
 // Helpers
 //------------------------------------------------------------------------------
 
-var anyFunctionPattern = /^(?:Function(?:Declaration|Expression)|ArrowFunctionExpression)$/;
-var arrayOrTypedArrayPattern = /Array$/;
-var arrayMethodPattern = /^(?:every|filter|find|findIndex|forEach|map|some)$/;
-var bindOrCallOrApplyPattern = /^(?:bind|call|apply)$/;
-var breakableTypePattern = /^(?:(?:Do)?While|For(?:In|Of)?|Switch)Statement$/;
-var thisTagPattern = /^[\s\*]*@this/m;
+let anyFunctionPattern = /^(?:Function(?:Declaration|Expression)|ArrowFunctionExpression)$/;
+let anyLoopPattern = /^(?:DoWhile|For|ForIn|ForOf|While)Statement$/;
+let arrayOrTypedArrayPattern = /Array$/;
+let arrayMethodPattern = /^(?:every|filter|find|findIndex|forEach|map|some)$/;
+let bindOrCallOrApplyPattern = /^(?:bind|call|apply)$/;
+let breakableTypePattern = /^(?:(?:Do)?While|For(?:In|Of)?|Switch)Statement$/;
+let thisTagPattern = /^[\s\*]*@this/m;
 
 /**
  * Checks reference if is non initializer and writable.
@@ -31,7 +32,7 @@ var thisTagPattern = /^[\s\*]*@this/m;
  * @private
  */
 function isModifyingReference(reference, index, references) {
-    var identifier = reference.identifier,
+    let identifier = reference.identifier,
         modifyingDifferentIdentifier;
 
     /*
@@ -57,7 +58,7 @@ function isModifyingReference(reference, index, references) {
 function isES5Constructor(node) {
     return (
         node.id &&
-        node.id.name[0] === node.id.name[0].toLocaleUpperCase()
+        node.id.name[0] !== node.id.name[0].toLocaleLowerCase()
     );
 }
 
@@ -159,7 +160,7 @@ function isMethodWhichHasThisArg(node) {
  * @returns {boolean} Whether or not the node has a `@this` tag in its comments.
  */
 function hasJSDocThisTag(node, sourceCode) {
-    var jsdocComment = sourceCode.getJSDocComment(node);
+    let jsdocComment = sourceCode.getJSDocComment(node);
 
     if (jsdocComment && thisTagPattern.test(jsdocComment.value)) {
         return true;
@@ -176,14 +177,14 @@ function hasJSDocThisTag(node, sourceCode) {
 
 /**
  * Determines if a node is surrounded by parentheses.
- * @param {RuleContext} context The context object passed to the rule
+ * @param {SourceCode} sourceCode The ESLint source code object
  * @param {ASTNode} node The node to be checked.
  * @returns {boolean} True if the node is parenthesised.
  * @private
  */
-function isParenthesised(context, node) {
-    var previousToken = context.getTokenBefore(node),
-        nextToken = context.getTokenAfter(node);
+function isParenthesised(sourceCode, node) {
+    let previousToken = sourceCode.getTokenBefore(node),
+        nextToken = sourceCode.getTokenAfter(node);
 
     return Boolean(previousToken && nextToken) &&
         previousToken.value === "(" && previousToken.range[1] <= node.range[0] &&
@@ -284,7 +285,7 @@ module.exports = {
      * @returns {boolean} `true` if the node is an ESLint directive comment
      */
     isDirectiveComment: function(node) {
-        var comment = node.value.trim();
+        let comment = node.value.trim();
 
         return (
             node.type === "Line" && comment.indexOf("eslint-") === 0 ||
@@ -317,10 +318,10 @@ module.exports = {
      * @returns {escope.Variable|null} A found variable or `null`.
      */
     getVariableByName: function(initScope, name) {
-        var scope = initScope;
+        let scope = initScope;
 
         while (scope) {
-            var variable = scope.set.get(name);
+            let variable = scope.set.get(name);
 
             if (variable) {
                 return variable;
@@ -359,7 +360,7 @@ module.exports = {
         }
 
         while (node) {
-            var parent = node.parent;
+            let parent = node.parent;
 
             switch (parent.type) {
 
@@ -378,14 +379,15 @@ module.exports = {
                 //     // setup...
                 //     return function foo() { ... };
                 //   })();
-                case "ReturnStatement":
-                    var func = getUpperFunction(parent);
+                case "ReturnStatement": {
+                    const func = getUpperFunction(parent);
 
                     if (func === null || !isCallee(func)) {
                         return true;
                     }
                     node = func.parent;
                     break;
+                }
 
                 // e.g.
                 //   var obj = { foo() { ... } };
@@ -460,5 +462,128 @@ module.exports = {
 
         /* istanbul ignore next */
         return true;
+    },
+
+    /**
+     * Get the precedence level based on the node type
+     * @param {ASTNode} node node to evaluate
+     * @returns {int} precedence level
+     * @private
+     */
+    getPrecedence: function(node) {
+        switch (node.type) {
+            case "SequenceExpression":
+                return 0;
+
+            case "AssignmentExpression":
+            case "ArrowFunctionExpression":
+            case "YieldExpression":
+                return 1;
+
+            case "ConditionalExpression":
+                return 3;
+
+            case "LogicalExpression":
+                switch (node.operator) {
+                    case "||":
+                        return 4;
+                    case "&&":
+                        return 5;
+
+                    // no default
+                }
+
+                /* falls through */
+
+            case "BinaryExpression":
+
+                switch (node.operator) {
+                    case "|":
+                        return 6;
+                    case "^":
+                        return 7;
+                    case "&":
+                        return 8;
+                    case "==":
+                    case "!=":
+                    case "===":
+                    case "!==":
+                        return 9;
+                    case "<":
+                    case "<=":
+                    case ">":
+                    case ">=":
+                    case "in":
+                    case "instanceof":
+                        return 10;
+                    case "<<":
+                    case ">>":
+                    case ">>>":
+                        return 11;
+                    case "+":
+                    case "-":
+                        return 12;
+                    case "*":
+                    case "/":
+                    case "%":
+                        return 13;
+
+                    // no default
+                }
+
+                /* falls through */
+
+            case "UnaryExpression":
+                return 14;
+
+            case "UpdateExpression":
+                return 15;
+
+            case "CallExpression":
+
+                // IIFE is allowed to have parens in any position (#655)
+                if (node.callee.type === "FunctionExpression") {
+                    return -1;
+                }
+                return 16;
+
+            case "NewExpression":
+                return 17;
+
+            // no default
+        }
+        return 18;
+    },
+
+    /**
+     * Checks whether a given node is a loop node or not.
+     * The following types are loop nodes:
+     *
+     * - DoWhileStatement
+     * - ForInStatement
+     * - ForOfStatement
+     * - ForStatement
+     * - WhileStatement
+     *
+     * @param {ASTNode|null} node - A node to check.
+     * @returns {boolean} `true` if the node is a loop node.
+     */
+    isLoop: function(node) {
+        return Boolean(node && anyLoopPattern.test(node.type));
+    },
+
+    /**
+     * Checks whether a given node is a function node or not.
+     * The following types are function nodes:
+     *
+     * - ArrowFunctionExpression
+     * - FunctionDeclaration
+     * - FunctionExpression
+     *
+     * @param {ASTNode|null} node - A node to check.
+     * @returns {boolean} `true` if the node is a function node.
+     */
+    isFunction: function(node) {
+        return Boolean(node && anyFunctionPattern.test(node.type));
     }
 };

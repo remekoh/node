@@ -5,7 +5,7 @@
 
 "use strict";
 
-var util = require("../ast-utils");
+let util = require("../ast-utils");
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -27,7 +27,7 @@ module.exports = {
     },
 
     create: function(context) {
-        var always = (context.options[0] !== "never"),
+        let always = (context.options[0] !== "never"),
             message = always ? "Requires a space" : "Unexpected space(s)",
             sourceCode = context.getSourceCode();
 
@@ -39,11 +39,11 @@ module.exports = {
         function getOpenBrace(node) {
             if (node.type === "SwitchStatement") {
                 if (node.cases.length > 0) {
-                    return context.getTokenBefore(node.cases[0]);
+                    return sourceCode.getTokenBefore(node.cases[0]);
                 }
-                return context.getLastToken(node, 1);
+                return sourceCode.getLastToken(node, 1);
             }
-            return context.getFirstToken(node);
+            return sourceCode.getFirstToken(node);
         }
 
         /**
@@ -72,10 +72,10 @@ module.exports = {
         function checkSpacingInsideBraces(node) {
 
             // Gets braces and the first/last token of content.
-            var openBrace = getOpenBrace(node);
-            var closeBrace = context.getLastToken(node);
-            var firstToken = sourceCode.getTokenOrCommentAfter(openBrace);
-            var lastToken = sourceCode.getTokenOrCommentBefore(closeBrace);
+            let openBrace = getOpenBrace(node);
+            let closeBrace = sourceCode.getLastToken(node);
+            let firstToken = sourceCode.getTokenOrCommentAfter(openBrace);
+            let lastToken = sourceCode.getTokenOrCommentBefore(closeBrace);
 
             // Skip if the node is invalid or empty.
             if (openBrace.type !== "Punctuator" ||
